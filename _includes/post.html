@@ -1,0 +1,27 @@
+<header>
+    <h1>
+        <a rel="bookmark" href="{{ site.baseurl }}{{ page.url }}" itemprop="headline url">{{ page.title }}</a>
+    </h1>
+</header>
+
+<div class="content" itemprop="articleBody">
+    {{ content }}
+</div>
+
+<footer>
+    Posted on
+    <time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">{{ page.date | date_to_long_string }}</time>.
+
+    Tagged:
+    <span itemprop="keywords">
+    {% for tag in page.tags %}
+        <a rel="tag" class="tag" href="{{ site.baseurl }}/tags/#{{ tag | cgi_escape }}-tag">{{ tag }}</a>
+        {% unless page.tags.last == tag %}, {% endunless %}
+    {% endfor %}
+    </span>
+
+    <br>
+
+    Want to improve this post?
+    <a href="{{ site.githuburl }}/blob/master/_posts/{{ page.date | date:'%Y-%m-%d' }}-{{ page.url | remove:'/' }}.md">Send me a pull request!</a>
+</footer>

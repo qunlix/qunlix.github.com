@@ -1,0 +1,93 @@
+---
+layout: base
+pageid: post
+jquery: true
+scripts: [
+    '/js/hogan.min.js',
+    '/js/jquery.timeago.min.js',
+    '/js/comments.js'
+]
+---
+
+<div class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    {% include post.html %}
+
+    {% if page.commentsIssueId %}
+    <aside id="comments" aria-busy="true">
+        <h2>Comments</h2>
+        <p>
+            Want to post comment? Simply comment on
+            <a href="{{ site.githuburl }}/issues/{{ page.commentsIssueId }}" itemprop="discussionUrl">GitHub Issue #{{ page.commentsIssueId }}</a>
+            and it'll appear here.
+        </p>
+        <div class="loader">
+            <img src="{{ site.baseurl }}/img/ajax-loader.gif" alt="Loading..." title="Loading...">
+        </div>
+    </aside>
+    {% endif %}
+</div>
+
+
+{% if page.commentsIssueId %}
+{% raw %}
+<script id="comments-template" type="text/x-mustache">
+{{#comments}}
+    <div class="comment" itemprop="comment" itemscope itemtype="http://schema.org/UserComments">
+        <div class="header">
+            <span class="user" itemprop="creator" itemscope itemtype="http://schema.org/Person">
+                <a href="https://github.com/{{ user.login }}" itemprop="url">
+                    <img src="//gravatar.com/avatar/{{ user.gravatar_id }}?s=25&d=identicon&r=g"
+                         alt="Avatar"
+                         width="25"
+                         height="25"
+                         itemprop="image">
+
+                    <span class="name" itemprop="name">{{ user.login }}</span>
+                </a>
+            </span>
+
+            <a class="time" href="{{ site.githubUrl }}/issues/{{ site.commentsIssueId }}/#issuecomment-{{ id }}">
+                <time datetime="{{ created_at }}" itemprop="commentTime">{{ created_at }}</time>
+            </a>
+        </div>
+
+        <div class="content" itemprop="commentText">
+            {{{ body_html }}}
+        </div>
+    </div>
+{{/comments}}
+{{^comments}}
+    <div class="no-comments">
+        No comments yet. :(
+    </div>
+{{/comments}}
+</script>
+{% endraw %}
+
+
+<script id="comments-unsupported" type="text/plain">
+    <div class="unsupported">
+        Sorry, your browser doesn't support the
+        <span title="Cross-Origin Resource Sharing">features</span>
+        required to load the comments, but feel free to read them at
+        <a href="{{ site.githuburl }}/issues/{{ page.commentsIssueId }}">GitHub</a>
+        anyway.
+
+        Or even better,
+        <a href="http://browsehappy.com/">upgrade to a different browser</a>
+        <!--[if IE]>
+            or
+            <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a>
+        <![endif]-->
+        to read them here!
+    </div>
+</script>
+
+
+<script id="comments-error" type="text/plain">
+    <div class="error">
+        Oops, something broke while loading the comments. Please try again later or
+        <a href="{{ site.githuburl }}/issues/">report the problem</a>.
+    </div>
+</script>
+{% endif %}
