@@ -1,7 +1,7 @@
-flyerhzm.github.com
+qunlix.github.com
 ===================
 
-my blog <http://huangzhimin.com>
+my blog <http://blog.qunlix.com>
 
 Usage
 -----
