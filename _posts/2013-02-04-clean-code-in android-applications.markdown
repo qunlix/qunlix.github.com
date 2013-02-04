@@ -40,7 +40,7 @@ Without using any third party libraries, it is rather easy to pass a dependency 
 
 The activity class has a method called getApplication() which returns a reference to the application object that owns the activity. We simply cast it to MainApplication, and we can access the getter method for the MyService. Of course, the activity now has to "know" about the application, which might seem like a disadvantage. But remember, the activity already knows about its application. The method is built in.
 
-`public class MainActivity extends Activity  {
+{% highlight ruby %} public class MainActivity extends Activity  {
  
     private MyService service;
  
@@ -50,7 +50,7 @@ The activity class has a method called getApplication() which returns a referenc
         MainApplication app = (MainApplication) getApplication();
         service = app.getMyService();
     }
-}`
+}{% endhighlight  %} 
 
 ## RoboGuice ##
 The RoboGuice project utilizes Google's Guice library to add dependency injection support to Android. Guice itself comes in two flavors, with and without AOP (Aspect Oriented Programming) support. Internally, standard Guice relies on bytecode generation to perform method interception. Android however, does not support runtime bytecode generation, so RoboGuice depends on the version of Guice without AOP. Let's look at how we would implement the previous example using RoboGuice. To add a custom binding, you must implement an Application object that extends from RoboApplication. You then override the addApplicationModules(…) method, and add a module instance that binds your objects.
