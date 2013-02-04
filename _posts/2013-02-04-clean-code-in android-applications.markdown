@@ -21,6 +21,7 @@ The Spring Android project recently reached its fourth milestone release. With t
 Well, what is dependency injection? If you ask two different developers, you may get two different answers. You might hear about IOC, XML files, annotations, or some other implementation detail. In reality, dependency injection is simply a technique to reduce coupling by handing an object what it needs to work, rather than having the object reach out into its environment. That sounds easy enough, and you might be thinking to yourself you can already get this with class constructors and setter methods, which is completely true. However, recall from the overview section above, the Android system drives the application lifecycle, so the way we can do this is limited.
 ## The Android Way ##
 Without using any third party libraries, it is rather easy to pass a dependency to an Activity. As discussed earlier, the system creates the application instance. So by extending application, you can effectively create a singleton dependency instance, which can then be accessed by any of the activities in the app.
+
 `public class MainApplication extends Application  {
  
     private MyService service;
@@ -36,7 +37,9 @@ Without using any third party libraries, it is rather easy to pass a dependency 
     }
 }`
 
+
 The activity class has a method called getApplication() which returns a reference to the application object that owns the activity. We simply cast it to MainApplication, and we can access the getter method for the MyService. Of course, the activity now has to "know" about the application, which might seem like a disadvantage. But remember, the activity already knows about its application. The method is built in.
+
 `public class MainActivity extends Activity  {
  
     private MyService service;
@@ -48,9 +51,12 @@ The activity class has a method called getApplication() which returns a referenc
         service = app.getMyService();
     }
 }`
+
 ## RoboGuice ##
 The RoboGuice project utilizes Google's Guice library to add dependency injection support to Android. Guice itself comes in two flavors, with and without AOP (Aspect Oriented Programming) support. Internally, standard Guice relies on bytecode generation to perform method interception. Android however, does not support runtime bytecode generation, so RoboGuice depends on the version of Guice without AOP. Let's look at how we would implement the previous example using RoboGuice. To add a custom binding, you must implement an Application object that extends from RoboApplication. You then override the addApplicationModules(…) method, and add a module instance that binds your objects.
-`public class MainApplication extends RoboApplication {
+
+`
+public class MainApplication extends RoboApplication {
  
     @Override
     protected void addApplicationModules(List<Module> modules) {
@@ -64,16 +70,23 @@ The RoboGuice project utilizes Google's Guice library to add dependency injectio
     }
 }
 `
+
 AbstractAndroidModule extends from the the standard Guice AbstractModule. Override the configure() method to specify bindings:
-`public class MainModule extends AbstractAndroidModule {
+
+`
+public class MainModule extends AbstractAndroidModule {
  
     @Override
     protected void configure() {
         bind(MyService.class).to(MyServiceImpl.class);
     }
-}`
+}
+`
+
 Each activity must inherit from RoboActivity so that injection can occur:
-`public class MainActivity extends RoboActivity {
+
+`
+public class MainActivity extends RoboActivity {
  
     @Inject
     MyService service;
@@ -82,9 +95,13 @@ Each activity must inherit from RoboActivity so that injection can occur:
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
-}`
+}
+`
+
 This example is not overly impressive, since it requires more code to accomplish a similar task. RoboGuice wiring becomes more useful in larger applications that consist of multiple domain modules encapsulating considerable business logic. Also, the support it provides for injecting views, resources, and system services is generally useful. You can see this in the examples below. The first example illustrates the standard android approach, while the second utilizes RoboGuice. As you can see, RoboGuice allows you to eliminate much of the boilerplate lookup code.
-`public class MyActivity extends Activity {
+
+`
+public class MyActivity extends Activity {
  
     private TextView label;
  
@@ -100,8 +117,12 @@ This example is not overly impressive, since it requires more code to accomplish
         this.image = getResources().getDrawable(R.drawable.myimage);
         this.searchManager = (SearchManager) getSystemService(Activity.SEARCH_SERVICE);
     }
-}`
-`public class MyActivity extends RoboActivity {
+}
+`
+
+
+`
+public class MyActivity extends RoboActivity {
  
     @InjectView(R.id.mylabel)
     TextView label;
@@ -126,6 +147,7 @@ We've covered dependency injection and RoboGuice, and discussed the advantages a
 ## Android Annotations ##
 Android Annotations is a project started and maintained by Pierre-Yves Ricau. Through the use of annotations, the goal of the project is specifically to help reduce the amount of boilerplate code in Android projects. It's not trying to be a general dependency injection framework, and in fact, can work side by side with RoboGuice. There is some overlap, as Android Annotations provides some similar annotations for injecting views and resources, but it offers many other useful features as well. The main differentiator is that Android Annotations generates the boilerplate code at compile time, so there is no runtime penalty for using it. It does this by generating a subclass of each activity, and substituting the annotations with the standard boilerplate code. One minor disadvantage to this approach is that you must append an underscore to the name of each activity in your manifest file. For example, if I create a MyActivity class, Android Annotations will generate a corresponding MyActivity_ class. Additionally, any reference in startActivity(…) has to be updated to use the new class as well.
 Here you can see some similarities to RoboGuice. This is the Android Annotations version of the previous RoboGuice example. Note that using the @EActivity annotation on the class allows you to set the activity's layout. Another nice touch is that if you omit the resource id from the annotation, Android Annotations will look for a resource id that matches the name of the variable.
+
 `@EActivity(R.layout.myactivity) // Sets content view to R.layout.myactivity
 public class MyActivity extends Activity {
  
@@ -138,6 +160,7 @@ public class MyActivity extends Activity {
     @SystemService
     SearchManager searchManager;
 }`
+
 The annotations library is fairly extensive. Currently, it supports several areas of the SDK:
 - views
 - event handling
@@ -146,6 +169,7 @@ The annotations library is fairly extensive. Currently, it supports several area
 - system services
 - threading
 Here are a few more examples of what is possible. I want to highlight the click event handing and threading support, because they really illustrate the power of the library.
+
 `public class AnotherActivity extends Activity {
  
     @Click // When R.id.runProcess button is clicked
@@ -164,10 +188,12 @@ Here are a few more examples of what is possible. I want to highlight the click 
          // display a notification that task is complete
     }
 }`
+
 Some developers may be turned off by the use of code generation, but considering the limitations of the Android architecture, Android Annotations provides an elegant approach to minimizing the use of boilerplate code, helping you focus on your business logic while not increasing runtime footprint.
 ## Android Binding ##
 The final project I want to touch on is Android Binding. Android Binding is a MVVM (Model-View-ViewModel) framework, designed to separate the activity from working directly on the user interfaces. To do this, almost all of the code is moved out of the Android activity class and placed in a ViewModel object, which is meant to help with testability. The ViewModel object handles all the events and data for the view (the layout), but it is not tightly coupled to it. Events that occur in the view are sent to the ViewModel as commands. These commands then execute some business logic and possibly interact with the model, and update the ViewModel's properties so the View can then bind to them. If you have ever worked with .Net, then the concept of data binding will be quite familiar to you, and Android Binding strives to apply that concept to Android. Android Binding was started and is being maintained by Andy Tsui. It is still young and lacks documentation, but there is some nice potential.
 The example below shows an EmailActivity extending from BindingActivity. When you extend from BindingActivity, you use the setAndBindRootView(…) method to set the Model for the view:
+
 `public class EmailActivity extends BindingActivity {
  
     private EmailViewModel model;
@@ -179,7 +205,9 @@ The example below shows an EmailActivity extending from BindingActivity. When yo
         setAndBindRootView(R.layout.main, model);
     }
 }`
+
 The next example snippet shows the view declaration. For me, this is the really interesting part. Looking at this layout file, you can see the addition of the "binding" attribute, as well as a custom "binding" xmlns declaration. This example shows binding two text fields and a button, but the project supports binding to many other controls..
+
 `<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -211,7 +239,9 @@ The next example snippet shows the view declaration. For me, this is the really 
     />
  
 </LinearLayout>`
+
 Lastly, the EmailViewModel contains the data and control logic for the view. The excerpt below shows the Observables for the textfield values, as well as the Command that executes when the submit button is clicked:
+
 `public class EmailViewModel {
  
     @Required
@@ -231,6 +261,7 @@ Lastly, the EmailViewModel contains the data and control logic for the view. The
         }
     };
 }`
+
 There is more to this library than what I've included here. It also includes support for model validation through the use of a set of annotations. There are some built in rules, and you can use RegEx pattern matching, as well as implement your own custom rules. The recent version has also added support for binding to Options menus.
 Like RoboGuice, Android Binding is runtime-based and requires you to extend from specific Activity base classes. Such reliance on concrete inheritance would likely make it difficult to use RoboGuice and Binding together in the same application. Where I think Binding really shines is in larger business applications that have data entry and validation requirements. The declarative xml binding syntax is pretty nice. I'm not familiar with other projects doing this, and it shows a fresh perspective on Android development.
 ## Closing Thoughts ##
