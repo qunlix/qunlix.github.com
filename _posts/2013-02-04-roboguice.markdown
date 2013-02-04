@@ -1,7 +1,7 @@
 ---
 layout: post
-title: roboguice(1)
+title: roboguice
 categories:
--roboguice 
+- roboguice 
 ---
 <p>roboguice</p>
