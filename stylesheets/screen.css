@@ -468,7 +468,7 @@ h1.page-title {
 #header a,
 #header a:visited {
 	color: #fff;
-	front-size:16px;
+	font-size:16px;
 }
 #header #blog-title {
 	font-family: "Avenir Light", "Futura Light", helvetica, arial, sans-serif;
